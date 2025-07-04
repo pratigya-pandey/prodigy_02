@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stopwatch App</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .stopwatch-container {
+            background-color: #ffffff;
+            border-radius: 1.5rem; /* More rounded corners */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); /* Deeper shadow */
+            padding: 2.5rem; /* Increased padding */
+            width: 100%;
+            max-width: 480px; /* Max width for better desktop experience */
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem; /* Space between elements */
+        }
+        .time-display {
+            font-size: 3.5rem; /* Larger font size */
+            font-weight: 700; /* Bold time */
+            color: #1a202c; /* Darker text color */
+            margin-bottom: 1rem;
+            letter-spacing: -0.05em; /* Slightly tighter letter spacing */
+        }
+        .time-display span {
+            min-width: 2ch; /* Ensure consistent width for digits */
+            display: inline-block;
+        }
+        .time-display .milliseconds {
+            font-size: 2rem; /* Smaller for milliseconds */
+            color: #4a5568; /* Lighter color for milliseconds */
+        }
+        .control-buttons {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+            gap: 1rem; /* Space between buttons */
+        }
+        .control-button {
+            padding: 0.75rem 1.5rem; /* Adjusted padding */
+            border-radius: 9999px; /* Fully rounded buttons */
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border: none; /* Remove default border */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            min-width: 120px; /* Ensure buttons have a minimum width */
+        }
+        .control-button:hover {
+            transform: translateY(-2px); /* Slight lift on hover */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .control-button:active {
+            transform: translateY(0); /* Press down effect */
+            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Specific button styles */
+        .start-button {
+            background-color: #4CAF50; /* Green */
+            color: white;
+        }
+        .start-button:hover {
+            background-color: #45a049;
+        }
+        .pause-button {
+            background-color: #FFC107; /* Amber */
+            color: #333;
+        }
+        .pause-button:hover {
+            background-color: #e0b400;
+        }
+        .reset-button {
+            background-color: #F44336; /* Red */
+            color: white;
+        }
+        .reset-button:hover {
+            background-color: #da190b;
+        }
+        .lap-button {
+            background-color: #2196F3; /* Blue */
+            color: white;
+        }
+        .lap-button:hover {
+            background-color: #0b7dda;
+        }
+
+        .lap-times-container {
+            margin-top: 1.5rem;
+            max-height: 200px; /* Fixed height for scrollable lap times */
+            overflow-y: auto; /* Enable scrolling */
+            border-top: 1px solid #e2e8f0; /* Light border at the top */
+            padding-top: 1rem;
+        }
+        .lap-times-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .lap-times-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .lap-times-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        .lap-times-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        .lap-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .lap-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #edf2f7; /* Lighter border for items */
+            color: #2d3748; /* Darker text for lap items */
+            font-size: 1.1rem;
+        }
+        .lap-item:last-child {
+            border-bottom: none;
+        }
+        .lap-number {
+            font-weight: 600;
+            color: #4299e1; /* Blue for lap number */
+        }
+        .no-laps-message {
+            color: #718096;
+            font-style: italic;
+            padding: 1rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .stopwatch-container {
+                padding: 1.5rem;
+                gap: 1rem;
+            }
+            .time-display {
+                font-size: 2.5rem;
+            }
+            .time-display .milliseconds {
+                font-size: 1.5rem;
+            }
+            .control-buttons {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+            .control-button {
+                width: 100%; /* Full width buttons on small screens */
+                min-width: unset;
+            }
+            .lap-item {
+                font-size: 1rem;
+                padding: 0.6rem 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="stopwatch-container">
+        <h1 class="text-3xl font-bold text-gray-900 mb-4">Stopwatch</h1>
+
+        <!-- Time Display -->
+        <div class="time-display">
+            <span id="minutes">00</span>:<span id="seconds">00</span>.<span id="milliseconds" class="milliseconds">000</span>
+        </div>
+
+        <!-- Control Buttons -->
+        <div class="control-buttons">
+            <button id="startButton" class="control-button start-button">Start</button>
+            <button id="pauseButton" class="control-button pause-button" disabled>Pause</button>
+            <button id="resetButton" class="control-button reset-button" disabled>Reset</button>
+            <button id="lapButton" class="control-button lap-button" disabled>Lap</button>
+        </div>
+
+        <!-- Lap Times Display -->
+        <div class="lap-times-container">
+            <ul id="lapList" class="lap-list">
+                <li id="noLapsMessage" class="no-laps-message">No laps recorded yet.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Get DOM elements
+        const minutesDisplay = document.getElementById('minutes');
+        const secondsDisplay = document.getElementById('seconds');
+        const millisecondsDisplay = document.getElementById('milliseconds');
+        const startButton = document.getElementById('startButton');
+        const pauseButton = document.getElementById('pauseButton');
+        const resetButton = document.getElementById('resetButton');
+        const lapButton = document.getElementById('lapButton');
+        const lapList = document.getElementById('lapList');
+        const noLapsMessage = document.getElementById('noLapsMessage');
+
+        // Stopwatch variables
+        let startTime; // Stores the timestamp when the stopwatch started or resumed
+        let elapsedTime = 0; // Stores the total elapsed time in milliseconds
+        let timerInterval; // Stores the interval ID for clearing the timer
+        let isRunning = false; // Flag to check if the stopwatch is running
+        let lapCounter = 0; // Counter for lap numbers
+
+        /**
+         * Formats a number to have at least two digits, padding with leading zeros if necessary.
+         * @param {number} num - The number to format.
+         * @returns {string} The formatted string.
+         */
+        function formatTime(num) {
+            return num < 10 ? '0' + num : num;
+        }
+
+        /**
+         * Formats milliseconds to have three digits, padding with leading zeros.
+         * @param {number} num - The milliseconds to format.
+         * @returns {string} The formatted string.
+         */
+        function formatMilliseconds(num) {
+            if (num < 10) return '00' + num;
+            if (num < 100) return '0' + num;
+            return num;
+        }
+
+        /**
+         * Updates the time display on the screen.
+         */
+        function updateTime() {
+            // Calculate current elapsed time based on when it started/resumed
+            const currentTime = Date.now();
+            const currentElapsedTime = elapsedTime + (currentTime - startTime);
+
+            let totalMilliseconds = currentElapsedTime;
+
+            // Calculate minutes, seconds, and milliseconds
+            const minutes = Math.floor(totalMilliseconds / (1000 * 60));
+            totalMilliseconds %= (1000 * 60); // Remaining milliseconds after extracting minutes
+
+            const seconds = Math.floor(totalMilliseconds / 1000);
+            totalMilliseconds %= 1000; // Remaining milliseconds after extracting seconds
+
+            const milliseconds = Math.floor(totalMilliseconds); // Milliseconds
+
+            // Update display elements
+            minutesDisplay.textContent = formatTime(minutes);
+            secondsDisplay.textContent = formatTime(seconds);
+            millisecondsDisplay.textContent = formatMilliseconds(milliseconds);
+        }
+
+        /**
+         * Starts the stopwatch.
+         */
+        function startStopwatch() {
+            if (!isRunning) {
+                isRunning = true;
+                startTime = Date.now(); // Record the current time as the start point
+                timerInterval = setInterval(updateTime, 10); // Update every 10 milliseconds for smooth display
+
+                // Update button states
+                startButton.disabled = true;
+                pauseButton.disabled = false;
+                resetButton.disabled = false;
+                lapButton.disabled = false;
+            }
+        }
+
+        /**
+         * Pauses the stopwatch.
+         */
+        function pauseStopwatch() {
+            if (isRunning) {
+                isRunning = false;
+                clearInterval(timerInterval); // Stop the interval
+                elapsedTime += Date.now() - startTime; // Add the current segment's elapsed time to total
+
+                // Update button states
+                startButton.disabled = false;
+                pauseButton.disabled = true;
+                lapButton.disabled = true; // Lap button should be disabled when paused
+            }
+        }
+
+        /**
+         * Resets the stopwatch and clears lap times.
+         */
+        function resetStopwatch() {
+            // Ensure stopwatch is paused before resetting
+            if (isRunning) {
+                pauseStopwatch();
+            }
+
+            elapsedTime = 0; // Reset total elapsed time
+            lapCounter = 0; // Reset lap counter
+
+            // Reset display to 00:00.000
+            minutesDisplay.textContent = '00';
+            secondsDisplay.textContent = '00';
+            millisecondsDisplay.textContent = '000';
+
+            // Clear lap list
+            lapList.innerHTML = '';
+            lapList.appendChild(noLapsMessage); // Add back the "No laps" message
+            noLapsMessage.style.display = 'block'; // Ensure message is visible
+
+            // Update button states
+            startButton.disabled = false;
+            pauseButton.disabled = true;
+            resetButton.disabled = true;
+            lapButton.disabled = true;
+        }
+
+        /**
+         * Records the current time as a lap.
+         */
+        function recordLap() {
+            // Calculate current elapsed time for the lap
+            const currentLapTime = elapsedTime + (Date.now() - startTime);
+
+            let totalMilliseconds = currentLapTime;
+
+            const minutes = Math.floor(totalMilliseconds / (1000 * 60));
+            totalMilliseconds %= (1000 * 60);
+
+            const seconds = Math.floor(totalMilliseconds / 1000);
+            totalMilliseconds %= 1000;
+
+            const milliseconds = Math.floor(totalMilliseconds);
+
+            lapCounter++; // Increment lap counter
+
+            // Create a new lap item element
+            const lapItem = document.createElement('li');
+            lapItem.classList.add('lap-item');
+            lapItem.innerHTML = `
+                <span class="lap-number">Lap ${lapCounter}:</span>
+                <span>${formatTime(minutes)}:${formatTime(seconds)}.${formatMilliseconds(milliseconds)}</span>
+            `;
+
+            // Append the new lap item to the beginning of the list
+            lapList.prepend(lapItem);
+
+            // Hide the "No laps recorded yet" message if it's visible
+            if (noLapsMessage.parentNode) {
+                noLapsMessage.style.display = 'none';
+            }
+        }
+
+        // Event Listeners for buttons
+        startButton.addEventListener('click', startStopwatch);
+        pauseButton.addEventListener('click', pauseStopwatch);
+        resetButton.addEventListener('click', resetStopwatch);
+        lapButton.addEventListener('click', recordLap);
+
+        // Initialize button states on load
+        resetStopwatch(); // Call reset to set initial button states and display
+    </script>
+</body>
+</html>
